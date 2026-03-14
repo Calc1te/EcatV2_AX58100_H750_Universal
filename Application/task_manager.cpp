@@ -150,6 +150,13 @@ namespace aim::ecat::task {
                     );
                     break;
                 }
+                case static_cast<uint8_t>(TaskType::SUPER_CAP): {
+                    conf->is_can_task.set();
+                    conf->runnable = std::make_unique<super_cap::SUPER_CAP>(
+                        buffer::get_buffer(buffer::Type::ECAT_ARGS)
+                    );
+                    break;
+                }
                 default: {
                 }
             }

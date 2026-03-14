@@ -51,6 +51,7 @@ They're probably not working or are not working properly.
     * **MS5837**: Pressure sensor (I2C interface)
     * **PMU**: Power Management Unit (UAVCAN Protocol)
     * **ADC**: Analog-to-Digital Converter readings
+    * **SUPER CAP**: Super capacitor controller
 
 ## Status Indicators (LEDs)
 

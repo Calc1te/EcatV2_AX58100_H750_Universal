@@ -30,7 +30,8 @@ namespace aim::ecat::task {
         ADC = 9,
         CAN_PMU = 10,
         SBUS_RC = 11,
-        DM_MOTOR = 12
+        DM_MOTOR = 12,
+        SUPER_CAP = 13
     };
 
     enum class ConnectionLostAction : uint8_t {
@@ -40,7 +41,8 @@ namespace aim::ecat::task {
 
     class CustomRunnable {
     public:
-        explicit CustomRunnable(const bool is_run_task_enabled, const TaskType task_type) : task_type(task_type), is_run_task_enabled(is_run_task_enabled) {
+        explicit CustomRunnable(const bool is_run_task_enabled, const TaskType task_type) : task_type(task_type),
+            is_run_task_enabled(is_run_task_enabled) {
         }
 
         virtual ~CustomRunnable() = default;
@@ -91,7 +93,8 @@ namespace aim::ecat::task {
 
     class CanRunnable : public CustomRunnable {
     public:
-        explicit CanRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(is_run_task_enabled, task_type) {
+        explicit CanRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(
+            is_run_task_enabled, task_type) {
         }
 
         ~CanRunnable() override = default;
@@ -122,7 +125,8 @@ namespace aim::ecat::task {
 
     class UartRunnable : public CustomRunnable {
     public:
-        explicit UartRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(is_run_task_enabled, task_type) {
+        explicit UartRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(
+            is_run_task_enabled, task_type) {
         }
 
         ~UartRunnable() override = default;
@@ -140,7 +144,8 @@ namespace aim::ecat::task {
 
     class I2CRunnable : public CustomRunnable {
     public:
-        explicit I2CRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(is_run_task_enabled, task_type) {
+        explicit I2CRunnable(const bool is_run_task_enabled, const TaskType task_type) : CustomRunnable(
+            is_run_task_enabled, task_type) {
         }
 
         ~I2CRunnable() override = default;
@@ -313,7 +318,8 @@ namespace aim::ecat::task {
                                   << 16 |
                                   get_peripheral<peripheral::UartPeripheral>()->recv_buf_->get_buf_pointer<uint8_t>()[1]
                                   << 8 |
-                                  get_peripheral<peripheral::UartPeripheral>()->recv_buf_->get_buf_pointer<uint8_t>()[2];
+                                  get_peripheral<peripheral::UartPeripheral>()->recv_buf_->get_buf_pointer<uint8_t>()[
+                                      2];
                             break;
                         }
                     }
@@ -913,6 +919,66 @@ namespace aim::ecat::task {
                 memset(shared_tx_buf_, 0, 8);
                 shared_tx_buf_[0] = 0x9A;
             }
+        };
+    }
+
+    namespace super_cap {
+        enum class ReportedState : uint8_t {
+            UNKNOWN = 255,
+            DISCHARGE = 0,
+            CHARGE = 1,
+            WAIT = 2,
+            SOFT_START_PROTECTION = 3,
+            OCP_PROTECTION = 4,
+            OVP_BAT_PROTECTION = 5,
+            UVP_BAT_PROTECTION = 6,
+            UVP_CAP_PROTECTION = 7,
+            OTP_PROTECTION = 8
+        };
+
+        struct ReportPacket {
+            uint8_t cap_valid;
+            uint8_t cap_status;
+            uint8_t cap_remain_percentage;
+            uint8_t chassis_power;
+            uint8_t battery_volt;
+            uint8_t chassis_only_power;
+        };
+
+        struct ControlPacket {
+            // 1 enable 0 disable
+            uint8_t cap_enable;
+            // 1 charge 0 discharge
+            uint8_t do_charge;
+            uint8_t max_charge_power;
+            uint8_t allow_charge_power;
+        };
+
+        class SUPER_CAP final : public CanRunnable {
+        public:
+            explicit SUPER_CAP(buffer::Buffer *buffer);
+
+            void write_to_master(buffer::Buffer *slave_to_master_buf) override;
+
+            void read_from_master(buffer::Buffer *master_to_slave_buf) override;
+
+            void can_recv(FDCAN_RxHeaderTypeDef *rx_header, uint8_t *rx_data) override;
+
+            void run_task() override;
+
+            void on_connection_lost() override;
+
+        private:
+            ThreadSafeTimestamp last_receive_time_{};
+            ReportedState state_{ReportedState::UNKNOWN};
+
+            uint32_t chassis_to_cap_packet_id_{};
+            uint32_t cap_to_chassis_packet_id_{};
+
+            ThreadSafeBuffer rx_buf_{6};
+            ThreadSafeBuffer tx_buf_{4};
+
+            ConnectionLostAction connection_lost_action_{ConnectionLostAction::KEEP_LAST};
         };
     }
 }

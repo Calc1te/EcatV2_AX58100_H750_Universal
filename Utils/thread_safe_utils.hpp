@@ -141,13 +141,19 @@ namespace aim::utils::thread_safety {
             active_buf_.store(write_buf, std::memory_order_release);
         }
 
-
         void read(uint8_t *dst, uint8_t length) const {
             if (length > size_) {
                 length = size_;
             }
             const uint8_t *read_buf = active_buf_.load(std::memory_order_acquire);
             std::memcpy(dst, read_buf, length);
+        }
+
+        void clear() {
+            uint8_t *write_buf = active_buf_.load(std::memory_order_acquire) == buf1_ ? buf2_ : buf1_;
+            std::memset(write_buf, 0, size_);
+
+            active_buf_.store(write_buf, std::memory_order_release);
         }
 
     private:
