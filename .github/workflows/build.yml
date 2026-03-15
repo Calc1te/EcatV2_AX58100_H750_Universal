@@ -20,7 +20,7 @@ jobs:
           SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
-          source-directory: 'Application'
+          # source-directory: 'Application'
           # target-directory: 'Application'
           include-patterns-file: 'sync_files'
           destination-github-username: 'Calc1te'
