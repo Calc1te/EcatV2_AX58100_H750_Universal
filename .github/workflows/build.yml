@@ -21,6 +21,7 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
         with:
           source-directory: 'Application'
+          traget-directory: 'Application'
           destination-github-username: 'Calc1te'
           destination-repository-name: 'EcatV2_AX58100_H723_Universal'
           user-email: calcitevalentin@outlook.com
