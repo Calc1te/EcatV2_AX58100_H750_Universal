@@ -1,0 +1,25 @@
+name: sync
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    sync:
+        runs-on: ubuntu-latest
+        container: pandoc/latex
+
+        steps:
+            -   name: Push to another repo
+                uses: cpina/github-action-push-to-another-repository@main
+                env:
+                    SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+                    API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+                with:
+                    source-directory: 'output'
+                    destination-github-username: 'Calc1te'
+                    destination-repository-name: 'EcatV2_AX58100_H723_Universal'
+                    user-email: calcitevalentin@outlook.com
+                    target-branch: main
